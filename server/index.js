@@ -37,20 +37,27 @@ io.on('connection', (socket) => {
 
         socket.join(user.room);
 
+        io.to(user.room).emit('roomData', {room: user.room, users: getUserInRoom(user.room)});
+
         callback();
     })
 
     socket.on('sendMessage', (data, callback) => {
         const user = getUser(socket.id);
-        console.log(user);
 
         io.to(user.room).emit('message', { user: user.name, text: data});
+        io.to(user.room).emit('roomData', {room: user.room, users: getUserInRoom(user.room)});
 
         callback();
     })
 
     socket.on('disconnect', () =>{
-        console.log('User left.');
+        const user = rmUser(socket.id);
+
+        if(user) {
+            io.to(user.room).emit('message', {user:'admin', text:`${user.name} has left.`});
+        }
+        console.log(`${socket.id} left.`);
     })
 
 });
